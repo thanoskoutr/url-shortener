@@ -59,9 +59,9 @@ func NewRouter() *httprouter.Router {
 	router := httprouter.New()
 	router.GET("/", Index)
 	router.GET("/redirect", Redirect)
-	router.GET("/redirect/:url", RedirectURL)
+	router.GET("/redirect/:short_url", RedirectURL)
 	router.GET("/shorten", Shorten)
-	router.GET("/shorten/:url", ShortenURL)
+	router.GET("/shorten/:long_url", ShortenURL)
 	return router
 }
 
@@ -97,8 +97,8 @@ func Redirect(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 func RedirectURL(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNotFound)
-	shorturl := ps.ByName("url")
-	msg := fmt.Sprintf("URL %s Not Found", shorturl)
+	shortURL := ps.ByName("short_url")
+	msg := fmt.Sprintf("URL %s Not Found", shortURL)
 	jsonResp, err := createJSONResponse(msg)
 	if err != nil {
 		log.Fatal(err)
@@ -115,8 +115,8 @@ func Shorten(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 func ShortenURL(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNotFound)
-	url := ps.ByName("url")
-	msg := fmt.Sprintf("Cannot encode URL: %s", url)
+	longURL := ps.ByName("long_url")
+	msg := fmt.Sprintf("Cannot encode URL: %s", longURL)
 	jsonResp, err := createJSONResponse(msg)
 	if err != nil {
 		log.Fatal(err)
