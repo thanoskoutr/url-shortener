@@ -71,7 +71,6 @@ func main() {
 	}
 	fmt.Printf("Starting the server on :%v", port)
 	log.Printf("Listening on port: %v", port)
-	http.ListenAndServe(":"+port, dbHandler)
 	if err := http.ListenAndServe(":"+port, dbHandler); err != nil {
 		log.Fatal(err)
 	}
