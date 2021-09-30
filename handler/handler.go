@@ -67,9 +67,9 @@ func NewRouter() *httprouter.Router {
 
 // createJSONResponse takes a string message and returns a JSON reponse
 // with the message, as a slice of bytes.
-func createJSONResponse(msg string) ([]byte, error) {
+func createJSONResponse(attribute string, value string) ([]byte, error) {
 	resp := make(map[string]string)
-	resp["message"] = msg
+	resp[attribute] = value
 	jsonResp, err := json.Marshal(resp)
 	if err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func createJSONResponse(msg string) ([]byte, error) {
 func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	msg := "Hello"
-	jsonResp, err := createJSONResponse(msg)
+	jsonResp, err := createJSONResponse("message", msg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -99,7 +99,7 @@ func RedirectURL(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.WriteHeader(http.StatusNotFound)
 	shortURL := ps.ByName("short_url")
 	msg := fmt.Sprintf("URL %s Not Found", shortURL)
-	jsonResp, err := createJSONResponse(msg)
+	jsonResp, err := createJSONResponse("message", msg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -117,7 +117,7 @@ func ShortenURL(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.WriteHeader(http.StatusNotFound)
 	longURL := ps.ByName("long_url")
 	msg := fmt.Sprintf("Cannot encode URL: %s", longURL)
-	jsonResp, err := createJSONResponse(msg)
+	jsonResp, err := createJSONResponse("message", msg)
 	if err != nil {
 		log.Fatal(err)
 	}
