@@ -59,11 +59,11 @@ func main() {
 
 	// TEMP: Add some entries to the Database
 	pathsToUrls := map[string]string{
-		"/gnu/health":   "https://savannah.gnu.org/projects/health",
-		"/gnu/avr-libc": "https://savannah.nongnu.org/projects/avr-libc",
-		"/gnu/dino":     "https://savannah.nongnu.org/projects/dino",
-		"/gnu/ddd":      "https://savannah.gnu.org/projects/ddd",
-		"/gnu/epsilon":  "https://savannah.gnu.org/projects/epsilon",
+		"health":   "https://savannah.gnu.org/projects/health",
+		"avr-libc": "https://savannah.nongnu.org/projects/avr-libc",
+		"dino":     "https://savannah.nongnu.org/projects/dino",
+		"ddd":      "https://savannah.gnu.org/projects/ddd",
+		"epsilon":  "https://savannah.gnu.org/projects/epsilon",
 	}
 	err = database.PutMapEntriesDB(db, pathsToUrls)
 	if err != nil {
@@ -71,7 +71,7 @@ func main() {
 	}
 
 	// Create a new httprouter to handle routes
-	router := handler.NewRouter()
+	router := handler.NewRouter(db)
 
 	// Start server
 	port := os.Getenv("PORT")
