@@ -55,10 +55,9 @@ func Redirect(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 // RedirectURL handles requests for /redirect/:url path
 func RedirectURL(db *database.Database) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		// TEMP: Dummy way, check directly in Database, do not read all entries and then check
-		// FIX: GetEntryDB(shortURL) -> If found -> redirect to long URL, Else -> redirect home
-		// Read all entries from Database, save in a map
-		entries, err := database.GetEntriesDB(db)
+		shortURL := ps.ByName("short_url")
+
+		longURL, err := database.GetEntryDB(db, shortURL)
 		if err != nil {
 			// Database Error
 			log.Fatal(err)
@@ -70,10 +69,6 @@ func RedirectURL(db *database.Database) httprouter.Handle {
 			}
 			w.Write(jsonResp)
 		}
-		log.Print(entries)
-
-		shortURL := ps.ByName("short_url")
-		longURL := entries[shortURL]
 
 		if longURL == "" {
 			// URL Not Found
