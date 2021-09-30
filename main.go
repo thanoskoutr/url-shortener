@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -58,11 +57,21 @@ func main() {
 	}
 	defer db.BoltDB.Close()
 
-	// Create a default request multiplexer as the last fallback
-	mux := defaultMux()
+	// TEMP: Add some entries to the Database
+	pathsToUrls := map[string]string{
+		"/gnu/health":   "https://savannah.gnu.org/projects/health",
+		"/gnu/avr-libc": "https://savannah.nongnu.org/projects/avr-libc",
+		"/gnu/dino":     "https://savannah.nongnu.org/projects/dino",
+		"/gnu/ddd":      "https://savannah.gnu.org/projects/ddd",
+		"/gnu/epsilon":  "https://savannah.gnu.org/projects/epsilon",
+	}
+	err = database.PutMapEntriesDB(db, pathsToUrls)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// Build the DBHandler using the previous handler as the fallback
-	dbHandler := createDBHandler(db, mux)
+	// Create a new httprouter to handle routes
+	router := handler.NewRouter()
 
 	// Start server
 	port := os.Getenv("PORT")
@@ -71,49 +80,7 @@ func main() {
 	}
 	fmt.Printf("Starting the server on :%v", port)
 	log.Printf("Listening on port: %v", port)
-	if err := http.ListenAndServe(":"+port, dbHandler); err != nil {
+	if err := http.ListenAndServe(":"+port, router); err != nil {
 		log.Fatal(err)
 	}
-}
-
-// defaultMux is a default request multiplexer for all paths
-func defaultMux() *http.ServeMux {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", home)
-	return mux
-}
-
-// home is the default fallaback function handler for all paths
-func home(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusNotFound)
-	resp := make(map[string]string)
-	resp["message"] = "Resource Not Found"
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		log.Fatal(err)
-	}
-	w.Write(jsonResp)
-}
-
-// createDBHandler reads the Database, creates and returns a DB Hundler
-func createDBHandler(db *database.Database, fallback http.Handler) http.HandlerFunc {
-	// Add some entries to the Database
-	pathsToUrls := map[string]string{
-		"/gnu/health":   "https://savannah.gnu.org/projects/health",
-		"/gnu/avr-libc": "https://savannah.nongnu.org/projects/avr-libc",
-		"/gnu/dino":     "https://savannah.nongnu.org/projects/dino",
-		"/gnu/ddd":      "https://savannah.gnu.org/projects/ddd",
-		"/gnu/epsilon":  "https://savannah.gnu.org/projects/epsilon",
-	}
-	err := database.PutMapEntriesDB(db, pathsToUrls)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	dbHandler, err := handler.DBHandler(db, fallback)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return dbHandler
 }
