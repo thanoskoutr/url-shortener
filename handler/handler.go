@@ -46,20 +46,6 @@ func createJSON(r interface{}) ([]byte, error) {
 	return jsonResp, nil
 }
 
-// createJSONResponse takes string slices of attributes and its values
-// and returns a JSON reponse with the message, as a slice of bytes.
-// func createJSONResponse(attributes []string, values []string) ([]byte, error) {
-// 	resp := make(map[string]string)
-// 	for i, attribute := range attributes {
-// 		resp[attribute] = values[i]
-// 	}
-// 	jsonResp, err := json.Marshal(resp)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return jsonResp, nil
-// }
-
 // parseJSONRequest takes the Reponse body and a ShortenReq object
 // and unmarshalls the JSON reponse to the ShortenReq object.
 func parseJSONRequest(reqBody io.Reader, req *ShortenReq) error {
@@ -162,8 +148,6 @@ func ShortenURL(db *database.Database) httprouter.Handle {
 			w.Write(jsonResp)
 			return
 		}
-
-		log.Printf("long_url = %s", req.LongURL)
 
 		// Long URL Not Supplied
 		if req.LongURL == "" {
