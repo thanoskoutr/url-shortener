@@ -58,8 +58,9 @@ func Redirect(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 // RedirectURL handles requests for /redirect/:url path
 func RedirectURL(db *database.Database) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		// Short URL named parameter
 		shortURL := ps.ByName("short_url")
-
+		// Search Database
 		longURL, err := database.GetEntryDB(db, shortURL)
 		if err != nil {
 			// Database Error
@@ -74,9 +75,8 @@ func RedirectURL(db *database.Database) httprouter.Handle {
 			}
 			w.Write(jsonResp)
 		}
-
+		// URL Not Found
 		if longURL == "" {
-			// URL Not Found
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusNotFound)
 			attr := []string{"message"}
@@ -102,6 +102,7 @@ func Shorten(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 // ShortenURL handles requests for /encode/:url path
 func ShortenURL(db *database.Database) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		// Long URL named parameter
 		longURL := ps.ByName("long_url")
 		// Check if in Database -> Return short_url, Else continue
 		// Convert long_url to short_url -> Return short_url in JSON
