@@ -3,6 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -29,6 +31,20 @@ func createJSONResponse(attributes []string, values []string) ([]byte, error) {
 		return nil, err
 	}
 	return jsonResp, nil
+}
+
+// parseJSONRequest takes the Reponse body and a ShortenReq object
+// and unmarshalls the JSON reponse to the ShortenReq object.
+func parseJSONRequest(reqBody io.Reader, req *ShortenReq) error {
+	body, err := ioutil.ReadAll(reqBody)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(body, req)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // NewRouter creates a new httprouter Router and
@@ -106,11 +122,11 @@ func ShortenURL(db *database.Database) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		// Long URL named parameter
 		var req ShortenReq
-		// Read Body
-		err := json.NewDecoder(r.Body).Decode(&req)
+		// Read Request Body, parse it as JSON and get long URL
+		err := parseJSONRequest(r.Body, &req)
 		defer r.Body.Close()
 		if err != nil {
-			// Error Parsing JSON body
+			// Error Reading Request Body
 			log.Print(err)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
