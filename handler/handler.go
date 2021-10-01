@@ -46,9 +46,9 @@ func createJSON(r interface{}) ([]byte, error) {
 	return jsonResp, nil
 }
 
-// parseJSONRequest takes the Reponse body and a ShortenReq object
+// parseJSON takes the Reponse body and a ShortenReq object
 // and unmarshalls the JSON reponse to the ShortenReq object.
-func parseJSONRequest(reqBody io.Reader, req *ShortenReq) error {
+func parseJSON(reqBody io.Reader, req *ShortenReq) error {
 	body, err := ioutil.ReadAll(reqBody)
 	if err != nil {
 		return err
@@ -58,6 +58,23 @@ func parseJSONRequest(reqBody io.Reader, req *ShortenReq) error {
 		return err
 	}
 	return nil
+}
+
+// sendResponse replies to the request with a JSON response and a status code.
+func sendResponse(w http.ResponseWriter, r *http.Request, statusCode int, jsonResp []byte) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	w.Write(jsonResp)
+}
+
+// sendErrorResponse same as sendResponse but creates and logs the error message to send.
+func sendErrorResponse(w http.ResponseWriter, r *http.Request, statusCode int, e error) {
+	log.Print(e)
+	jsonResp, err := createJSON(ErrorResp{Error: e.Error()})
+	if err != nil {
+		log.Fatal(err)
+	}
+	sendResponse(w, r, statusCode, jsonResp)
 }
 
 // NewRouter creates a new httprouter Router and
@@ -75,13 +92,11 @@ func NewRouter(db *database.Database) *httprouter.Router {
 
 // Index handles requests for / path
 func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	w.Header().Set("Content-Type", "application/json")
-	msgResp := MessageResp{Message: "Welcome to url-shortener"}
-	jsonResp, err := createJSON(msgResp)
+	jsonResp, err := createJSON(MessageResp{Message: "Welcome to url-shortener"})
 	if err != nil {
 		log.Fatal(err)
 	}
-	w.Write(jsonResp)
+	sendResponse(w, r, http.StatusOK, jsonResp)
 }
 
 // Redirect handles requests for /redirect path
@@ -98,28 +113,17 @@ func RedirectURL(db *database.Database) httprouter.Handle {
 		longURL, err := database.GetEntryDB(db, shortURL)
 		if err != nil {
 			// Database Error
-			log.Print(err)
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusInternalServerError)
-			errorResp := ErrorResp{Error: err.Error()}
-			jsonResp, err := createJSON(errorResp)
-			if err != nil {
-				log.Fatal(err)
-			}
-			w.Write(jsonResp)
+			sendErrorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
 		// Long URL Not Found
 		if longURL == "" {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusNotFound)
 			msg := fmt.Sprintf("URL %s Not Found", shortURL)
-			msgResp := MessageResp{Message: msg}
-			jsonResp, err := createJSON(msgResp)
+			jsonResp, err := createJSON(MessageResp{Message: msg})
 			if err != nil {
 				log.Fatal(err)
 			}
-			w.Write(jsonResp)
+			sendResponse(w, r, http.StatusNotFound, jsonResp)
 			return
 		}
 		// Redirect using long URL found
@@ -133,74 +137,44 @@ func ShortenURL(db *database.Database) httprouter.Handle {
 		// Long URL named parameter
 		var req ShortenReq
 		// Read Request Body, parse it as JSON and get long URL
-		err := parseJSONRequest(r.Body, &req)
+		err := parseJSON(r.Body, &req)
 		defer r.Body.Close()
 		if err != nil {
 			// Error Reading Request Body
-			log.Print(err)
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			errorResp := ErrorResp{Error: err.Error()}
-			jsonResp, err := createJSON(errorResp)
-			if err != nil {
-				log.Fatal(err)
-			}
-			w.Write(jsonResp)
+			sendErrorResponse(w, r, http.StatusBadRequest, err)
 			return
 		}
-
 		// Long URL Not Supplied
 		if req.LongURL == "" {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			errorResp := ErrorResp{Error: "long_url parameter is required"}
-			jsonResp, err := createJSON(errorResp)
+			jsonResp, err := createJSON(ErrorResp{Error: "long_url parameter is required"})
 			if err != nil {
 				log.Fatal(err)
 			}
-			w.Write(jsonResp)
+			sendResponse(w, r, http.StatusBadRequest, jsonResp)
 			return
 		}
 		// Convert long_url to short_url
 		shortURL, err := shortener.Encode(req.LongURL)
 		if err != nil {
 			// Encoding Error
-			log.Print(err)
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusInternalServerError)
-			errorResp := ErrorResp{Error: err.Error()}
-			jsonResp, err := createJSON(errorResp)
-			if err != nil {
-				log.Fatal(err)
-			}
-			w.Write(jsonResp)
+			sendErrorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
-
 		// Save to Database
 		err = database.PutEntryDB(db, shortURL, req.LongURL)
 		if err != nil {
 			// Database Error
-			log.Print(err)
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusInternalServerError)
-			errorResp := ErrorResp{Error: err.Error()}
-			jsonResp, err := createJSON(errorResp)
-			if err != nil {
-				log.Fatal(err)
-			}
-			w.Write(jsonResp)
+			sendErrorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
-
 		// Return short_url in JSON
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		shortenResp := ShortenResp{LongURL: req.LongURL, ShortURL: shortURL}
-		jsonResp, err := createJSON(shortenResp)
+		jsonResp, err := createJSON(ShortenResp{
+			LongURL:  req.LongURL,
+			ShortURL: shortURL,
+		})
 		if err != nil {
 			log.Fatal(err)
 		}
-		w.Write(jsonResp)
+		sendResponse(w, r, http.StatusNotFound, jsonResp)
 	}
 }
