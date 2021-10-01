@@ -175,6 +175,6 @@ func ShortenURL(db *database.Database) httprouter.Handle {
 		if err != nil {
 			log.Fatal(err)
 		}
-		sendResponse(w, r, http.StatusNotFound, jsonResp)
+		sendResponse(w, r, http.StatusOK, jsonResp)
 	}
 }
