@@ -19,19 +19,46 @@ type ShortenReq struct {
 	LongURL string `json:"long_url"`
 }
 
-// createJSONResponse takes string slices of attributes and its values
-// and returns a JSON reponse with the message, as a slice of bytes.
-func createJSONResponse(attributes []string, values []string) ([]byte, error) {
-	resp := make(map[string]string)
-	for i, attribute := range attributes {
-		resp[attribute] = values[i]
-	}
-	jsonResp, err := json.Marshal(resp)
+// ShortenResp represents the JSON response that will be sent,
+// on the shorten endpoint.
+type ShortenResp struct {
+	LongURL  string `json:"long_url"`
+	ShortURL string `json:"short_url"`
+}
+
+// MessageResp represents the JSON response that will be sent as a message.
+type MessageResp struct {
+	Message string `json:"message"`
+}
+
+// ErrorResp represents the JSON response that will be sent on errors.
+type ErrorResp struct {
+	Error string `json:"error"`
+}
+
+// createJSON takes any Resp type as an argument
+// and returns a JSON response with its fields as attributes and values.
+func createJSON(r interface{}) ([]byte, error) {
+	jsonResp, err := json.Marshal(r)
 	if err != nil {
 		return nil, err
 	}
 	return jsonResp, nil
 }
+
+// createJSONResponse takes string slices of attributes and its values
+// and returns a JSON reponse with the message, as a slice of bytes.
+// func createJSONResponse(attributes []string, values []string) ([]byte, error) {
+// 	resp := make(map[string]string)
+// 	for i, attribute := range attributes {
+// 		resp[attribute] = values[i]
+// 	}
+// 	jsonResp, err := json.Marshal(resp)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return jsonResp, nil
+// }
 
 // parseJSONRequest takes the Reponse body and a ShortenReq object
 // and unmarshalls the JSON reponse to the ShortenReq object.
@@ -63,9 +90,8 @@ func NewRouter(db *database.Database) *httprouter.Router {
 // Index handles requests for / path
 func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
-	attr := []string{"message"}
-	val := []string{"Welcome to url-shortener"}
-	jsonResp, err := createJSONResponse(attr, val)
+	msgResp := MessageResp{Message: "Welcome to url-shortener"}
+	jsonResp, err := createJSON(msgResp)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -89,9 +115,8 @@ func RedirectURL(db *database.Database) httprouter.Handle {
 			log.Print(err)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusInternalServerError)
-			attr := []string{"error"}
-			val := []string{err.Error()}
-			jsonResp, err := createJSONResponse(attr, val)
+			errorResp := ErrorResp{Error: err.Error()}
+			jsonResp, err := createJSON(errorResp)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -102,10 +127,9 @@ func RedirectURL(db *database.Database) httprouter.Handle {
 		if longURL == "" {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusNotFound)
-			attr := []string{"message"}
 			msg := fmt.Sprintf("URL %s Not Found", shortURL)
-			val := []string{msg}
-			jsonResp, err := createJSONResponse(attr, val)
+			msgResp := MessageResp{Message: msg}
+			jsonResp, err := createJSON(msgResp)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -130,9 +154,8 @@ func ShortenURL(db *database.Database) httprouter.Handle {
 			log.Print(err)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
-			attr := []string{"error"}
-			val := []string{err.Error()}
-			jsonResp, err := createJSONResponse(attr, val)
+			errorResp := ErrorResp{Error: err.Error()}
+			jsonResp, err := createJSON(errorResp)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -146,9 +169,8 @@ func ShortenURL(db *database.Database) httprouter.Handle {
 		if req.LongURL == "" {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
-			attr := []string{"error"}
-			val := []string{"long_url parameter is required"}
-			jsonResp, err := createJSONResponse(attr, val)
+			errorResp := ErrorResp{Error: "long_url parameter is required"}
+			jsonResp, err := createJSON(errorResp)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -162,9 +184,8 @@ func ShortenURL(db *database.Database) httprouter.Handle {
 			log.Print(err)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusInternalServerError)
-			attr := []string{"error"}
-			val := []string{err.Error()}
-			jsonResp, err := createJSONResponse(attr, val)
+			errorResp := ErrorResp{Error: err.Error()}
+			jsonResp, err := createJSON(errorResp)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -179,9 +200,8 @@ func ShortenURL(db *database.Database) httprouter.Handle {
 			log.Print(err)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusInternalServerError)
-			attr := []string{"error"}
-			val := []string{err.Error()}
-			jsonResp, err := createJSONResponse(attr, val)
+			errorResp := ErrorResp{Error: err.Error()}
+			jsonResp, err := createJSON(errorResp)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -192,9 +212,8 @@ func ShortenURL(db *database.Database) httprouter.Handle {
 		// Return short_url in JSON
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
-		attr := []string{"long_url", "short_url"}
-		val := []string{req.LongURL, shortURL}
-		jsonResp, err := createJSONResponse(attr, val)
+		shortenResp := ShortenResp{LongURL: req.LongURL, ShortURL: shortURL}
+		jsonResp, err := createJSON(shortenResp)
 		if err != nil {
 			log.Fatal(err)
 		}
