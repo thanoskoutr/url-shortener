@@ -10,11 +10,13 @@ import (
 	"github.com/thanoskoutr/url-shortener/database"
 )
 
-// createJSONResponse takes a string message and returns a JSON reponse
-// with the message, as a slice of bytes.
-func createJSONResponse(attribute string, value string) ([]byte, error) {
+// createJSONResponse takes string slices of attributes and its values
+// and returns a JSON reponse with the message, as a slice of bytes.
+func createJSONResponse(attributes []string, values []string) ([]byte, error) {
 	resp := make(map[string]string)
-	resp[attribute] = value
+	for i, attribute := range attributes {
+		resp[attribute] = values[i]
+	}
 	jsonResp, err := json.Marshal(resp)
 	if err != nil {
 		return nil, err
@@ -39,8 +41,9 @@ func NewRouter(db *database.Database) *httprouter.Router {
 // Index handles requests for / path
 func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
-	msg := "Welcome to url-shortener"
-	jsonResp, err := createJSONResponse("message", msg)
+	attr := []string{"message"}
+	val := []string{"Welcome to url-shortener"}
+	jsonResp, err := createJSONResponse(attr, val)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -63,7 +66,9 @@ func RedirectURL(db *database.Database) httprouter.Handle {
 			log.Fatal(err)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusInternalServerError)
-			jsonResp, err := createJSONResponse("error", err.Error())
+			attr := []string{"error"}
+			val := []string{err.Error()}
+			jsonResp, err := createJSONResponse(attr, val)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -74,8 +79,10 @@ func RedirectURL(db *database.Database) httprouter.Handle {
 			// URL Not Found
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusNotFound)
+			attr := []string{"message"}
 			msg := fmt.Sprintf("URL %s Not Found", shortURL)
-			jsonResp, err := createJSONResponse("message", msg)
+			val := []string{msg}
+			jsonResp, err := createJSONResponse(attr, val)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -95,11 +102,16 @@ func Shorten(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 // ShortenURL handles requests for /encode/:url path
 func ShortenURL(db *database.Database) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		longURL := ps.ByName("long_url")
+		// Check if in Database -> Return short_url, Else continue
+		// Convert long_url to short_url -> Return short_url in JSON
+
+		// TEMP: Just returns the request
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
-		longURL := ps.ByName("long_url")
-		msg := fmt.Sprintf("Cannot encode URL: %s", longURL)
-		jsonResp, err := createJSONResponse("message", msg)
+		attr := []string{"long_url", "short_url"}
+		val := []string{longURL, "lol"}
+		jsonResp, err := createJSONResponse(attr, val)
 		if err != nil {
 			log.Fatal(err)
 		}
