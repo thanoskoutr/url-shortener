@@ -169,7 +169,7 @@ func ShortenURL(db *database.Database) httprouter.Handle {
 			return
 		}
 		// If same short_url (key) is found but different long_url (value), Collision Error
-		if longURLTest != longURL {
+		if longURLTest != longURL && longURLTest != "" {
 			msg := fmt.Sprintf("URL Collision, Found 2 values for %s key: %s, %s", shortURL, longURLTest, longURL)
 			log.Print(msg)
 			// TMP: Send JSON response
