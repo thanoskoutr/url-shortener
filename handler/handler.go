@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/rs/cors"
 	"github.com/thanoskoutr/url-shortener/database"
 	"github.com/thanoskoutr/url-shortener/shortener"
 )
@@ -77,17 +78,19 @@ func sendErrorResponse(w http.ResponseWriter, r *http.Request, statusCode int, e
 	sendResponse(w, r, statusCode, jsonResp)
 }
 
-// NewRouter creates a new httprouter Router and
-// sets the handler for each route.
+// NewRouter creates a new httprouter Router,
+// sets the handler for each route and adds middleware
+// for enabling CORS with the default options.
 //
-// Returns an *httprouter.Router
-func NewRouter(db *database.Database) *httprouter.Router {
+// Returns an http.Handler
+func NewRouter(db *database.Database) http.Handler {
 	router := httprouter.New()
 	router.GET("/", Index)
 	router.GET("/redirect", Redirect)
 	router.GET("/redirect/:short_url", RedirectURL(db))
 	router.POST("/shorten", ShortenURL(db))
-	return router
+	handler := cors.Default().Handler(router)
+	return handler
 }
 
 // Index handles requests for / path
