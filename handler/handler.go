@@ -154,14 +154,17 @@ func ShortenURL(db *database.Database) httprouter.Handle {
 			return
 		}
 		// Convert long_url to short_url
-		shortURL, err := shortener.Encode(req.LongURL)
+		longURL, shortURL, err := shortener.Encode(req.LongURL)
 		if err != nil {
 			// Encoding Error
 			sendErrorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
+
+		// FIX: Check if (short_url, long_url) in DB -> If yes, keep the next 7 characters -> Repeat until there is no match in DB
+
 		// Save to Database
-		err = database.PutEntryDB(db, shortURL, req.LongURL)
+		err = database.PutEntryDB(db, shortURL, longURL)
 		if err != nil {
 			// Database Error
 			sendErrorResponse(w, r, http.StatusInternalServerError, err)
@@ -169,7 +172,7 @@ func ShortenURL(db *database.Database) httprouter.Handle {
 		}
 		// Return short_url in JSON
 		jsonResp, err := createJSON(ShortenResp{
-			LongURL:  req.LongURL,
+			LongURL:  longURL,
 			ShortURL: shortURL,
 		})
 		if err != nil {

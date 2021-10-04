@@ -57,19 +57,6 @@ func main() {
 	}
 	defer db.BoltDB.Close()
 
-	// TEMP: Add some entries to the Database
-	pathsToUrls := map[string]string{
-		"health":   "https://savannah.gnu.org/projects/health",
-		"avr-libc": "https://savannah.nongnu.org/projects/avr-libc",
-		"dino":     "https://savannah.nongnu.org/projects/dino",
-		"ddd":      "https://savannah.gnu.org/projects/ddd",
-		"epsilon":  "https://savannah.gnu.org/projects/epsilon",
-	}
-	err = database.PutMapEntriesDB(db, pathsToUrls)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	// Create a new httprouter to handle routes
 	router := handler.NewRouter(db)
 
