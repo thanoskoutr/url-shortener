@@ -74,7 +74,8 @@ To create the `go.mod` from scratch (only for dev purposes), run:
 ```bash
 $ go mod init github.com/thanoskoutr/url-shortener
 $ go get github.com/boltdb/bolt
-$ go get gopkg.in/yaml.v2
+$ go get github.com/julienschmidt/httprouter
+$ go get github.com/rs/cors
 $ go mod tidy
 ```
 
@@ -95,7 +96,12 @@ For instruction on how to deploy this Go web service (or any other Go app) for f
 
 ## API Specification
 
-[API Documentation on Spotlight](https://thanoskoutr.stoplight.io/docs/url-shortener/)
+You can find the [API Documentation on Spotlight](https://thanoskoutr.stoplight.io/docs/url-shortener/).
+
+Contains:
+
+- API Documentation.
+- Ability to make calls to the API Endpoints of the service.
 
 ## BoltDB Web Interface
 
@@ -214,8 +220,9 @@ Source Code in `shortener/shortener.go`, function `Encode`:
 - DEVOPS:
   - Add Dockerfile and containerize the application.
   - Make application a Go module/package/CLI.
-  - Calculate required bandwidth
-  - Deploy to cloud/server.
+  - Generate Documentation from source files.
+  - Calculate required bandwidth/storage/traffic for API.
+  - Deploy BoltDB with app (for persistance storage).
 
 ### Features
 
@@ -223,3 +230,4 @@ Source Code in `shortener/shortener.go`, function `Encode`:
 - Count short URL clicks
 - User Auth
 - Quota / API Key
+- Calculate
