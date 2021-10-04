@@ -4,6 +4,10 @@
 
 An simple URL shortener RESTful web service API written in Go, using the `net/http` package for the server, the [HttpRouter](https://github.com/julienschmidt/httprouter) for the router and [Bolt DB](https://github.com/boltdb/bolt) for the database.
 
+![API Docs Screenshot](images/api-docs.png)
+
+_See [below for API Documentation](#api-specification)_
+
 ## Usage
 
 ### Run service
