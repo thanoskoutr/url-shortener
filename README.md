@@ -4,6 +4,8 @@
 
 An simple URL shortener RESTful web service API written in Go, using the `net/http` package for the server, the [HttpRouter](https://github.com/julienschmidt/httprouter) for the router and [Bolt DB](https://github.com/boltdb/bolt) for the database.
 
+**Deployed on [Heroku](https://www.heroku.com), access it on [url-shortener-thanoskoutr.herokuapp.com](https://url-shortener-thanoskoutr.herokuapp.com)**
+
 ![API Docs Screenshot](images/api-docs.png)
 
 _See [below for API Documentation](#api-specification)_
@@ -75,6 +77,10 @@ $ go get github.com/boltdb/bolt
 $ go get gopkg.in/yaml.v2
 $ go mod tidy
 ```
+
+## Deployment
+
+For instruction on how to deploy this Go web service (or any other Go app) for free on a Platform as a Service cloud provider like Heroku, see the [Heroku Deployment Guide](Heroku.md).
 
 ## Features
 
