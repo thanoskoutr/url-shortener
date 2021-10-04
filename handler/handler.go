@@ -161,7 +161,25 @@ func ShortenURL(db *database.Database) httprouter.Handle {
 			return
 		}
 
-		// FIX: Check if (short_url, long_url) in DB -> If yes, keep the next 7 characters -> Repeat until there is no match in DB
+		// Check if (short_url, long_url) entry is in Database (To detect Collision Error)
+		longURLTest, err := database.GetEntryDB(db, shortURL)
+		if err != nil {
+			// Database Error
+			sendErrorResponse(w, r, http.StatusInternalServerError, err)
+			return
+		}
+		// If same short_url (key) is found but different long_url (value), Collision Error
+		if longURLTest != longURL {
+			msg := fmt.Sprintf("URL Collision, Found 2 values for %s key: %s, %s", shortURL, longURLTest, longURL)
+			log.Print(msg)
+			// TMP: Send JSON response
+			jsonResp, err := createJSON(MessageResp{Message: msg})
+			if err != nil {
+				log.Fatal(err)
+			}
+			sendResponse(w, r, http.StatusInternalServerError, jsonResp)
+			return
+		}
 
 		// Save to Database
 		err = database.PutEntryDB(db, shortURL, longURL)
