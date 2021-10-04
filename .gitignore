@@ -7,3 +7,6 @@
 # Ignore URL data files
 urls.json
 urls.yaml
+
+# Ignore executable
+url-shortener
